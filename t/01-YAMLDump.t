@@ -26,6 +26,7 @@ ___QUERY___:
   - st: \'1|351C26BEFD30011A156021D056C90100|Dodge$PreOwnedSearchResultsList$60368|true|#####false#0.0#0.0||||25|All|All|false|default|true|||||||||\'
   - startPosition: \'\'
   - yearRange: \'\'
+___SCHEME___: http
 ';
 
 is_deeply( $yaml, $uri->dump, 'Dump of YAML' );

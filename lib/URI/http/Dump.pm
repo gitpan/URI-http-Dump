@@ -12,7 +12,7 @@ use YAML qw();
 
 extends 'URI::http';
 
-our $VERSION = '0.01';
+our $VERSION = '0.03';
 
 use Sub::Exporter -setup => {
 	exports => [ qw( mle ) ]
@@ -43,7 +43,7 @@ sub new {
 			}
 
 			else {
-				die "I need a valid means to create a uri"
+				confess "I need a valid means to create a uri\n"
 			}
 
 		}
@@ -66,10 +66,11 @@ sub dump {
 	}
 
 	my $dump = {};
-	$dump->{ '___QUERY___' }     = \@query_w_hash;
+	$dump->{ '___SCHEME___' }    = $self->scheme;
+	$dump->{ '___PORT___' }      = $self->port;
 	$dump->{ '___HOST___' }      = $self->host;
 	$dump->{ '___PATH___' }      = $self->path;
-	$dump->{ '___PORT___' }      = $self->port;
+	$dump->{ '___QUERY___' }     = \@query_w_hash;
 	$dump->{ '___CANONICAL_SRC___' } = "$self";
 
 	YAML::Dump( $dump );
@@ -85,9 +86,10 @@ sub load {
 
 
 	my $new = URI::http->new( $dump->{ '___CANONICAL_SRC___' } );
-	$new->host( $dump->{ '___HOST___' } ) if exists $dump->{ '___HOST___' };
-	$new->path( $dump->{ '___PATH___' } ) if exists $dump->{ '___PATH___' };
-	$new->port( $dump->{ '___PORT___' } ) if exists $dump->{ '___PORT___' };
+	$new->scheme( $dump->{ '___SCHEME___' } ) if exists $dump->{ '___SCHEME___' };
+	$new->host(   $dump->{ '___HOST___'   } ) if exists $dump->{ '___HOST___' };
+	$new->port(   $dump->{ '___PORT___'   } ) if exists $dump->{ '___PORT___' };
+	$new->path(   $dump->{ '___PATH___'   } ) if exists $dump->{ '___PATH___' };
 
 	if ( exists $dump->{ '___QUERY___' } ) {
 		my @query;
@@ -132,6 +134,25 @@ sub mle {
 
 no Moose;
 
+## stupid pos package of shit.
+package URI::http;
+no strict;
+no warnings;
+use feature ':5.10';
+
+sub default_port {
+	my $self = shift;
+
+	my $port;
+	given ( $self->scheme ) {
+		when ( 'http' ) { $port=80 }
+		when ( 'https' ) { $port=443 }
+	}
+
+	$port;
+
+}
+
 1;
 
 __END__
@@ -140,9 +161,9 @@ __END__
 
 URI::http::Dump - A module to assist in the reverse engineering of URL parameters.
 
-=head1 VERSION
+=head1 CAVEAT
 
-Version 0.01
+B< This module is no longer officially supported by my standards -- though it should do what it does just fine. It violates the blackbox of URI. >
 
 =head1 SYNOPSIS
 
@@ -160,13 +181,15 @@ Version 0.01
 	perl -MURI::http::Dump -e'URI::http::Dump->new("uri")->makeLifeEasy';
 
 	## Same as.
-	perl -MURI::http::Dump -e'mls("http://google.com")'
+	perl -MURI::http::Dump -e'mle("http://google.com")'
 
 	## Overview of process
-	$ perl -MURI::http::Dump -e'mls("http://google.com")'
+	$ perl -MURI::http::Dump -e'mle("http://google.com")'
 	$ vim url.txt ## change stuff
-	$ perl -MURI::http::Dump -e'mls("http://google.com")'
+	$ perl -MURI::http::Dump -e'mle("http://google.com")'
 	http://google.com/foobar.do?a=b
+	
+	$ firefox $( perl -MURI::http::Dump -e'mle("http://google.com")' ) && vim url.txt
 
 =head1 DESCRIPTION
 
@@ -221,6 +244,12 @@ Accepts a HashRef of the YAML file-store. Returns a new C<URI::http> representat
 =head2 loadFile( $fileLocation )
 
 Accepts the YAML file-store location outputs a HashRef of the YAML file-store. This HashRef is processed by C<E<gt>load>. Returns a C<URI> representation of the file-store.
+
+=head2 makeLifeEasy ( $url )
+
+It will check to see if the file-store exists (url.txt), if it exists it will open the file construct the url form the components, and then dump the url the file-store composed into to STDOUT.
+
+If the file doesn't exist, it will generate the file-store from the component.
 
 =head1 AUTHOR
 

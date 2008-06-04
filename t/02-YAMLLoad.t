@@ -12,6 +12,7 @@ ___CANONICAL_SRC___: http://www.chryslerbrandcertified.com:82/dispatch.do?_1=&_2
 ___HOST___: www.chryslerbrandcertified.com
 ___PATH___: /dispatch.do
 ___PORT___: 82
+___SCHEME___: http
 ___QUERY___:
   - _1: \'\'
   - _2: \'\'

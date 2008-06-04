@@ -20,4 +20,6 @@ requires:
   MooseX::InsideOut: 0
   URI::http: 0
   YAML: 0
-version: 0.01
+  mro: 0
+  perl: 5.10.0
+version: 0.03
